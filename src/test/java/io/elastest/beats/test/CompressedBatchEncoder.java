@@ -1,5 +1,6 @@
-package io.elastest.beats;
+package io.elastest.beats.test;
 
+import io.elastest.beats.Batch;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelHandlerContext;

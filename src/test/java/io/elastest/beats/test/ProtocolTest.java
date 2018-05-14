@@ -1,6 +1,8 @@
-package io.elastest.beats;
+package io.elastest.beats.test;
 
 import org.junit.Test;
+
+import io.elastest.beats.Protocol;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

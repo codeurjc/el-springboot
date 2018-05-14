@@ -1,5 +1,10 @@
-package io.elastest.beats;
+package io.elastest.beats.test;
 
+import io.elastest.beats.BeatsHandler;
+import io.elastest.beats.ConnectionHandler;
+import io.elastest.beats.IMessageListener;
+import io.elastest.beats.Message;
+import io.elastest.beats.V1Batch;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.Before;

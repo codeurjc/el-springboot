@@ -186,7 +186,7 @@ public class SslSimpleBuilder {
      * Get the supported protocols
      * @return a defensive copy of the supported protocols
      */
-    String[] getProtocols() {
+    public String[] getProtocols() {
         return protocols.clone();
     }
 }

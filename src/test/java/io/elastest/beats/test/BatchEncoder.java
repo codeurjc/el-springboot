@@ -1,6 +1,10 @@
-package io.elastest.beats;
+package io.elastest.beats.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import io.elastest.beats.Batch;
+import io.elastest.beats.Message;
+import io.elastest.beats.Protocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;

@@ -1,5 +1,11 @@
-package io.elastest.beats;
+package io.elastest.beats.test;
 
+import io.elastest.beats.Message;
+import io.elastest.beats.MessageListener;
+import io.elastest.beats.Server;
+import io.elastest.beats.V1Batch;
+import io.elastest.beats.V2Batch;
+import io.elastest.beats.test.V2BatchTest;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
@@ -12,6 +18,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,7 +35,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.number.IsCloseTo.closeTo;
 
-
 public class ServerTest {
     private int randomPort;
     private EventLoopGroup group;
@@ -42,7 +48,8 @@ public class ServerTest {
     }
 
     @Test
-    public void testServerShouldTerminateConnectionWhenExceptionHappen() throws InterruptedException {
+    public void testServerShouldTerminateConnectionWhenExceptionHappen()
+            throws InterruptedException {
         int inactivityTime = 3; // in seconds
         int concurrentConnections = 10;
 
@@ -50,7 +57,8 @@ public class ServerTest {
 
         final CountDownLatch latch = new CountDownLatch(concurrentConnections);
 
-        final Server server = new Server(host, randomPort, inactivityTime, threadCount);
+        final Server server = new Server(host, randomPort, inactivityTime,
+                threadCount);
         final AtomicBoolean otherCause = new AtomicBoolean(false);
         server.setMessageListener(new MessageListener() {
             public void onNewConnection(ChannelHandlerContext ctx) {
@@ -66,13 +74,15 @@ public class ServerTest {
             }
 
             @Override
-            public void onNewMessage(ChannelHandlerContext ctx, Message message) {
+            public void onNewMessage(ChannelHandlerContext ctx,
+                    Message message) {
                 // Make sure connection is closed on exception too.
                 throw new RuntimeException("Dummy");
             }
 
             @Override
-            public void onException(ChannelHandlerContext ctx, Throwable cause) {
+            public void onException(ChannelHandlerContext ctx,
+                    Throwable cause) {
                 // Make sure only intended exception is thrown
                 if (!"Dummy".equals(cause.getMessage())) {
                     otherCause.set(true);
@@ -106,15 +116,15 @@ public class ServerTest {
     }
 
     @Test
-    public void testServerShouldTerminateConnectionIdleForTooLong() throws InterruptedException {
+    public void testServerShouldTerminateConnectionIdleForTooLong()
+            throws InterruptedException {
         int inactivityTime = 3; // in seconds
         int concurrentConnections = 10;
 
-        final Random random = new Random();
-
         final CountDownLatch latch = new CountDownLatch(concurrentConnections);
         final AtomicBoolean exceptionClose = new AtomicBoolean(false);
-        final Server server = new Server(host, randomPort, inactivityTime, threadCount);
+        final Server server = new Server(host, randomPort, inactivityTime,
+                threadCount);
         server.setMessageListener(new MessageListener() {
             @Override
             public void onNewConnection(ChannelHandlerContext ctx) {
@@ -126,12 +136,14 @@ public class ServerTest {
             }
 
             @Override
-            public void onNewMessage(ChannelHandlerContext ctx, Message message) {
+            public void onNewMessage(ChannelHandlerContext ctx,
+                    Message message) {
             }
 
             @Override
-            public void onException(ChannelHandlerContext ctx, Throwable cause) {
-                    exceptionClose.set(true);
+            public void onException(ChannelHandlerContext ctx,
+                    Throwable cause) {
+                exceptionClose.set(true);
             }
         });
 
@@ -152,7 +164,6 @@ public class ServerTest {
         try {
             long started = System.currentTimeMillis();
 
-
             for (int i = 0; i < concurrentConnections; i++) {
                 connectClient();
             }
@@ -161,7 +172,7 @@ public class ServerTest {
             long ended = System.currentTimeMillis();
 
             long diff = ended - started;
-            assertThat(diff/1000.0, is(closeTo(inactivityTime, .5)));
+            assertThat(diff / 1000.0, is(closeTo(inactivityTime, .5)));
             assertThat(exceptionClose.get(), is(false));
         } finally {
             server.stop();
@@ -169,8 +180,9 @@ public class ServerTest {
     }
 
     @Test
-    public void testServerShouldAcceptConcurrentConnection() throws InterruptedException {
-        final Server server = new Server(host, randomPort, 30, threadCount);
+    public void testServerShouldAcceptConcurrentConnection()
+            throws InterruptedException {
+        final Server server = new Server(host, 5044, 30, threadCount);
         SpyListener listener = new SpyListener();
         server.setMessageListener(listener);
         Runnable serverTask = new Runnable() {
@@ -189,18 +201,21 @@ public class ServerTest {
         // Each connection is sending 1 batch.
         int ConcurrentConnections = 5;
 
-        for(int i = 0; i < ConcurrentConnections; i++) {
-            Runnable clientTask = new Runnable(){
+        for (int i = 0; i < ConcurrentConnections; i++) {
+            Runnable clientTask = new Runnable() {
 
                 @Override
                 public void run() {
                     try {
 
-                        connectClient().addListener(new ChannelFutureListener() {
-                            @Override
-                            public void operationComplete(ChannelFuture future) throws Exception {
-                            }
-                        });
+                        connectClient()
+                                .addListener(new ChannelFutureListener() {
+                                    @Override
+                                    public void operationComplete(
+                                            ChannelFuture future)
+                                            throws Exception {
+                                    }
+                                });
 
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -210,13 +225,13 @@ public class ServerTest {
 
             new Thread(clientTask).start();
         }
-        // HACK: I didn't not find a nice solutions to test if the connection was still
+        // HACK: I didn't not find a nice solutions to test if the connection
+        // was still
         // open on the client without actually sending data down the wire.
         int iteration = 0;
         int maxIteration = 30;
 
-
-        while(listener.getReceivedCount() < ConcurrentConnections) {
+        while (listener.getReceivedCount() < ConcurrentConnections) {
             Thread.sleep(1000);
             iteration++;
 
@@ -234,21 +249,18 @@ public class ServerTest {
     }
 
     public ChannelFuture connectClient() throws InterruptedException {
-            Bootstrap b = new Bootstrap();
-            b.group(group)
-                    .channel(NioSocketChannel.class)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                                 @Override
-                                 public void initChannel(SocketChannel ch) throws Exception {
-                                     ChannelPipeline pipeline = ch.pipeline();
-                                     pipeline.addLast(new BatchEncoder());
-                                     pipeline.addLast(new DummyV2Sender());
-                                 }
-                             }
-                    );
-            return b.connect("localhost", randomPort);
+        Bootstrap b = new Bootstrap();
+        b.group(group).channel(NioSocketChannel.class)
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    public void initChannel(SocketChannel ch) throws Exception {
+                        ChannelPipeline pipeline = ch.pipeline();
+                        pipeline.addLast(new BatchEncoder());
+                        pipeline.addLast(new DummyV2Sender());
+                    }
+                });
+        return b.connect("localhost", randomPort);
     }
-
 
     /**
      * A dummy class to send a unique batch to an active server
@@ -258,17 +270,20 @@ public class ServerTest {
         public void channelActive(ChannelHandlerContext ctx) {
             V1Batch batch = new V1Batch();
             batch.setBatchSize(1);
-            batch.addMessage(new Message(1, Collections.singletonMap("hello", "world")));
+            batch.addMessage(
+                    new Message(1, Collections.singletonMap("hello", "world")));
 
             ctx.writeAndFlush(batch);
         }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+        protected void channelRead0(ChannelHandlerContext ctx, String msg)
+                throws Exception {
         }
 
         @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+                throws Exception {
             ctx.close();
         }
     }
@@ -288,18 +303,19 @@ public class ServerTest {
         }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+        protected void channelRead0(ChannelHandlerContext ctx, String msg)
+                throws Exception {
         }
 
         @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+                throws Exception {
             ctx.close();
         }
     }
 
-
     /**
-     *  Used to assert the number of messages send to the server
+     * Used to assert the number of messages send to the server
      */
     private class SpyListener extends MessageListener {
         private AtomicInteger receivedCount;
@@ -310,6 +326,8 @@ public class ServerTest {
         }
 
         public void onNewMessage(ChannelHandlerContext ctx, Message message) {
+            System.out.println("The message: ");
+            System.out.println(message);
             receivedCount.incrementAndGet();
         }
 

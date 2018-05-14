@@ -1,4 +1,4 @@
-package io.elastest.elspringboot;
+package io.elastest.elspringboot.test;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -78,7 +78,7 @@ public class V2Batch implements Batch {
      * @param buffer A ByteBuf pointing to serialized JSon
      * @param size size of the serialized Json
      */
-    void addMessage(int sequenceNumber, ByteBuf buffer, int size) {
+    public void addMessage(int sequenceNumber, ByteBuf buffer, int size) {
         written++;
         if (internalBuffer.writableBytes() < size + (2 * SIZE_OF_INT)){
             internalBuffer.capacity(internalBuffer.capacity() + size + (2 * SIZE_OF_INT));

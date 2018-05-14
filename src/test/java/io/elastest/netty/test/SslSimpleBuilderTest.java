@@ -1,6 +1,8 @@
-package io.elastest.netty;
+package io.elastest.netty.test;
 
 import org.junit.Test;
+
+import io.elastest.netty.SslSimpleBuilder;
 
 import static org.junit.Assert.*;
 

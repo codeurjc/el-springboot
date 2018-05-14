@@ -27,7 +27,7 @@ public class V1Batch implements Batch{
      * Add Message to the batch
      * @param message Message to add to the batch
      */
-    void addMessage(Message message){
+    public void addMessage(Message message){
         message.setBatch(this);
         messages.add(message);
     }

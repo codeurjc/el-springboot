@@ -1,6 +1,8 @@
-package io.elastest.beats;
+package io.elastest.beats.test;
 
 import org.junit.Test;
+
+import io.elastest.beats.Message;
 
 import java.util.HashMap;
 import java.util.Map;

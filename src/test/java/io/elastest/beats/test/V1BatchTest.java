@@ -1,7 +1,11 @@
-package io.elastest.beats;
+package io.elastest.beats.test;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import io.elastest.beats.Message;
+import io.elastest.beats.Protocol;
+import io.elastest.beats.V1Batch;
 
 import java.util.HashMap;
 

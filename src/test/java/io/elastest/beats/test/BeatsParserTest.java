@@ -1,8 +1,15 @@
-package io.elastest.beats;
+package io.elastest.beats.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
+
+import io.elastest.beats.Batch;
+import io.elastest.beats.BeatsParser;
+import io.elastest.beats.Message;
+import io.elastest.beats.Protocol;
+import io.elastest.beats.V1Batch;
+import io.elastest.beats.V2Batch;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;

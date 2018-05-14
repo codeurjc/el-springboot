@@ -1,8 +1,11 @@
-package io.elastest.beats;
+package io.elastest.beats.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 
+import io.elastest.beats.Message;
+import io.elastest.beats.Protocol;
+import io.elastest.beats.V2Batch;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.junit.Test;
