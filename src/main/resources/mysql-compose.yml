@@ -1,0 +1,18 @@
+version: '3'
+services:                                          
+    el-springboot-mysql:
+        image: elastest/edm-mysql:latest
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+            MYSQL_DATABASE: "elastest"
+            MYSQL_USER: elastest
+            MYSQL_PASSWORD: elastest
+        ports:
+            - 6033:3306
+        volumes:
+            - el-springboot-mysql:/var/lib/mysql
+            - ./config:/etc/mysql/conf.d
+volumes:
+    el-springboot-mysql:
+      driver: local
+

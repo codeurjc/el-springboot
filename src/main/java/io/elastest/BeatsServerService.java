@@ -17,7 +17,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 
 @Service
-public class ServerService {
+public class BeatsServerService {
     private static EventLoopGroup group;
     private final String host = "0.0.0.0";
     private final int threadCount = 10;
@@ -26,7 +26,7 @@ public class ServerService {
     @PostConstruct
     void init() throws InterruptedException {
         group = new NioEventLoopGroup();
-        this.testServerShouldAcceptConcurrentConnection();
+        this.startBeatsServer();
     }
 
     @PreDestroy
@@ -35,7 +35,7 @@ public class ServerService {
         server.stop();
     }
 
-    public void testServerShouldAcceptConcurrentConnection()
+    public void startBeatsServer()
             throws InterruptedException {
 
         server = new Server(host, 5044, 30, threadCount);
