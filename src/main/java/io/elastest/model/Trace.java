@@ -6,15 +6,18 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonView;
+
+import io.elastest.model.Enums.LevelEnum;
+import io.elastest.model.Enums.StreamType;
 
 @Entity
 public class Trace {
     public interface TraceView {
     }
+
+    /* *** Common *** */
 
     @Id
     String exec;
@@ -24,15 +27,64 @@ public class Trace {
     @JsonProperty("component")
     String component;
 
+    @JsonView({ TraceView.class })
+    @Column(name = "etType")
+    @JsonProperty("etType")
     String etType;
 
+    @JsonView({ TraceView.class })
+    @Column(name = "timestamp")
+    @JsonProperty("timestamp")
     Date timestamp;
 
+    @JsonView({ TraceView.class })
+    @Column(name = "stream")
+    @JsonProperty("stream")
     String stream;
 
+    @JsonView({ TraceView.class })
+    @Column(name = "containerName")
+    @JsonProperty("containerName")
     String containerName;
 
+    @JsonView({ TraceView.class })
+    @Column(name = "streamType", nullable = false)
+    @JsonProperty("streamType")
     StreamType streamType;
+
+    /* *** For Log *** */
+
+    @JsonView({ TraceView.class })
+    @Column(name = "message")
+    @JsonProperty("message")
+    private String message;
+
+    @Column(name = "level")
+    @JsonProperty("level")
+    @JsonView({ TraceView.class })
+    private LevelEnum level;
+
+    /* *** For Metrics *** */
+
+    @JsonView({ TraceView.class })
+    @Column(name = "metricName")
+    @JsonProperty("metricName")
+    private String metricName;
+
+    @JsonView({ TraceView.class })
+    @Column(name = "content", columnDefinition = "TEXT", length = 65535)
+    @JsonProperty("content")
+    private String content;
+
+    @JsonView({ TraceView.class })
+    @Column(name = "unit")
+    @JsonProperty("unit")
+    String unit;
+
+    @JsonView({ TraceView.class })
+    @Column(name = "units", columnDefinition = "TEXT", length = 65535)
+    @JsonProperty("units")
+    String units;
 
     /* ******************** */
     /* *** Constructors *** */
@@ -41,8 +93,14 @@ public class Trace {
     public Trace() {
     }
 
+    /* *********************** */
+    /* *** Getters/Setters *** */
+    /* *********************** */
+
     public Trace(String exec, String component, String etType, Date timestamp,
-            String stream, String containerName, StreamType streamType) {
+            String stream, String containerName, StreamType streamType,
+            String message, LevelEnum level, String metricName, String content,
+            String unit, String units) {
         super();
         this.exec = exec;
         this.component = component;
@@ -51,41 +109,13 @@ public class Trace {
         this.stream = stream;
         this.containerName = containerName;
         this.streamType = streamType;
+        this.message = message;
+        this.level = level;
+        this.metricName = metricName;
+        this.content = content;
+        this.unit = unit;
+        this.units = units;
     }
-
-    public enum StreamType {
-        LOG("log"),
-
-        COMPOSED_METRICS("composed_metrics"),
-
-        ATOMIC_METRIC("atomic_metric");
-
-        private String value;
-
-        StreamType(String value) {
-            this.value = value;
-        }
-
-        @Override
-        @JsonValue
-        public String toString() {
-            return String.valueOf(value);
-        }
-
-        @JsonCreator
-        public static StreamType fromValue(String text) {
-            for (StreamType b : StreamType.values()) {
-                if (String.valueOf(b.value).equals(text)) {
-                    return b;
-                }
-            }
-            return null;
-        }
-    }
-
-    /* *********************** */
-    /* *** Getters/Setters *** */
-    /* *********************** */
 
     public String getExec() {
         return exec;
@@ -141,6 +171,68 @@ public class Trace {
 
     public void setStreamType(StreamType streamType) {
         this.streamType = streamType;
+    }
+
+    /* ************** */
+    /* *** Others *** */
+    /* ************** */
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public LevelEnum getLevel() {
+        return level;
+    }
+
+    public void setLevel(LevelEnum level) {
+        this.level = level;
+    }
+
+    public String getMetricName() {
+        return metricName;
+    }
+
+    public void setMetricName(String metricName) {
+        this.metricName = metricName;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getUnits() {
+        return units;
+    }
+
+    public void setUnits(String units) {
+        this.units = units;
+    }
+
+    @Override
+    public String toString() {
+        return "Trace [exec=" + exec + ", component=" + component + ", etType="
+                + etType + ", timestamp=" + timestamp + ", stream=" + stream
+                + ", containerName=" + containerName + ", streamType="
+                + streamType + ", message=" + message + ", level=" + level
+                + ", metricName=" + metricName + ", content=" + content
+                + ", unit=" + unit + ", units=" + units + "]";
     }
 
 }
