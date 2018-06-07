@@ -19,11 +19,14 @@ import org.springframework.stereotype.Service;
 
 import io.elastest.model.Enums.LevelEnum;
 import io.elastest.model.Enums.StreamType;
+import io.elastest.dao.TraceRepository;
 import io.elastest.model.Trace;
 
 @Service
 public class TracesService {
     public final Logger log = getLogger(lookup().lookupClass());
+
+    private final TraceRepository traceRepository;
 
     final GrokDictionary dictionary = new GrokDictionary();
 
@@ -34,6 +37,10 @@ public class TracesService {
     String containerNameExpression = "%{CONTAINERNAME:containerName}";
     String componentExecAndComponentServiceExpression = "^(?<component>(test|sut|dynamic))_?(?<exec>\\d*)(_(?<componentService>[^_]*(?=_\\d*)?))?";
     String cleanMessageExpression = "^([<]\\d*[>].*)?(?>test_\\d*|sut_\\d*|dynamic_\\d*)\\D*(?>_exec)\\[.*\\][:][\\s]";
+
+    public TracesService(TraceRepository traceRepository) {
+        this.traceRepository = traceRepository;
+    }
 
     @PostConstruct
     private void init() {
@@ -48,6 +55,7 @@ public class TracesService {
         if (message != null && !message.isEmpty()) {
             Trace trace = new Trace();
             trace.setEtType("et_logs");
+            trace.setStream("default_log");
             trace.setStreamType(StreamType.LOG);
 
             // Timestamp
@@ -84,6 +92,8 @@ public class TracesService {
             message = message.replaceAll(cleanMessageExpression, "");
             trace.setMessage(message);
             log.debug("Trace: {}", trace);
+            
+            this.traceRepository.save(trace);
         }
     }
 

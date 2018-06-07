@@ -2,6 +2,8 @@ package io.elastest.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,6 +20,14 @@ public class Trace {
     /* *** Common *** */
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
+    @JsonProperty("id")
+    private Long id = null;
+
+    @JsonView({ TraceView.class })
+    @Column(name = "exec")
+    @JsonProperty("exec")
     String exec;
 
     @JsonView({ TraceView.class })
@@ -100,11 +110,12 @@ public class Trace {
     /* *** Getters/Setters *** */
     /* *********************** */
 
-    public Trace(String exec, String component, String etType, String timestamp,
-            String stream, String containerName, StreamType streamType,
-            String message, LevelEnum level, String metricName, String content,
-            String unit, String units) {
+    public Trace(Long id, String exec, String component, String etType,
+            String timestamp, String stream, String containerName,
+            StreamType streamType, String message, LevelEnum level,
+            String metricName, String content, String unit, String units) {
         super();
+        this.id = id == null ? 0 : id;
         this.exec = exec;
         this.component = component;
         this.etType = etType;
@@ -118,6 +129,14 @@ public class Trace {
         this.content = content;
         this.unit = unit;
         this.units = units;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id == null ? 0 : id;
     }
 
     public String getExec() {

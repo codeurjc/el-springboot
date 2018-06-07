@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import io.elastest.model.Trace;
 
-public interface TraceRepository extends JpaRepository<Trace, String> {
+public interface TraceRepository extends JpaRepository<Trace, Long> {
 
 }
