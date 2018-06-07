@@ -94,6 +94,16 @@
 			<version>4.1.18.Final</version>
 			<scope>compile</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.aicer.grok</groupId>
+			<artifactId>grok</artifactId>
+			<version>0.9.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

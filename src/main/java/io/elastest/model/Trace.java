@@ -1,7 +1,5 @@
 package io.elastest.model;
 
-import java.util.Date;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -28,6 +26,11 @@ public class Trace {
     String component;
 
     @JsonView({ TraceView.class })
+    @Column(name = "componentService")
+    @JsonProperty("componentService")
+    String componentService;
+
+    @JsonView({ TraceView.class })
     @Column(name = "etType")
     @JsonProperty("etType")
     String etType;
@@ -35,7 +38,7 @@ public class Trace {
     @JsonView({ TraceView.class })
     @Column(name = "timestamp")
     @JsonProperty("timestamp")
-    Date timestamp;
+    String timestamp;
 
     @JsonView({ TraceView.class })
     @Column(name = "stream")
@@ -97,7 +100,7 @@ public class Trace {
     /* *** Getters/Setters *** */
     /* *********************** */
 
-    public Trace(String exec, String component, String etType, Date timestamp,
+    public Trace(String exec, String component, String etType, String timestamp,
             String stream, String containerName, StreamType streamType,
             String message, LevelEnum level, String metricName, String content,
             String unit, String units) {
@@ -133,6 +136,14 @@ public class Trace {
         this.component = component;
     }
 
+    public String getComponentService() {
+        return componentService;
+    }
+
+    public void setComponentService(String componentService) {
+        this.componentService = componentService;
+    }
+
     public String getEtType() {
         return etType;
     }
@@ -141,11 +152,11 @@ public class Trace {
         this.etType = etType;
     }
 
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -227,7 +238,8 @@ public class Trace {
 
     @Override
     public String toString() {
-        return "Trace [exec=" + exec + ", component=" + component + ", etType="
+        return "Trace [exec=" + exec + ", component=" + component
+                + ", componentService=" + componentService + ", etType="
                 + etType + ", timestamp=" + timestamp + ", stream=" + stream
                 + ", containerName=" + containerName + ", streamType="
                 + streamType + ", message=" + message + ", level=" + level

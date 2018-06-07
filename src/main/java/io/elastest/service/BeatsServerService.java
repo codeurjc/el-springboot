@@ -1,12 +1,15 @@
-package io.elastest;
+package io.elastest.service;
 
 import static java.lang.Thread.sleep;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import io.elastest.beats.Message;
@@ -18,10 +21,13 @@ import io.netty.channel.nio.NioEventLoopGroup;
 
 @Service
 public class BeatsServerService {
+    public final Logger log = getLogger(lookup().lookupClass());
+
     private static EventLoopGroup group;
     private final String host = "0.0.0.0";
     private final int threadCount = 10;
     private Server server;
+    private final int beatsPort = 5044;
 
     @PostConstruct
     void init() throws InterruptedException {
@@ -31,14 +37,14 @@ public class BeatsServerService {
 
     @PreDestroy
     void stopServer() throws InterruptedException {
+        log.info("Shuting down Beats server");
         group.shutdownGracefully();
         server.stop();
     }
 
-    public void startBeatsServer()
-            throws InterruptedException {
+    public void startBeatsServer() throws InterruptedException {
 
-        server = new Server(host, 5044, 30, threadCount);
+        server = new Server(host, beatsPort, 30, threadCount);
         SpyListener listener = new SpyListener();
         server.setMessageListener(listener);
         Runnable serverTask = new Runnable() {
@@ -52,6 +58,7 @@ public class BeatsServerService {
         };
 
         new Thread(serverTask).start();
+        log.info("Listen at {} Beats Port", beatsPort);
         sleep(1000); // start server give is some time.
 
     }
@@ -68,8 +75,8 @@ public class BeatsServerService {
         }
 
         public void onNewMessage(ChannelHandlerContext ctx, Message message) {
-            System.out.println("The message: ");
-            System.out.println(message.getData());
+            log.debug("The event message: {}", message);
+            log.debug("The message data: {}", message.getData());
             receivedCount.incrementAndGet();
         }
     }
