@@ -27,7 +27,7 @@ import io.elastest.util.Utils;
 
 @Service
 public class TracesService {
-    public final Logger log = getLogger(lookup().lookupClass());
+    public final Logger logger = getLogger(lookup().lookupClass());
 
     private final TraceRepository traceRepository;
 
@@ -90,7 +90,7 @@ public class TracesService {
     /* *********** */
 
     public void processTcpTrace(String message, Date timestamp) {
-        log.debug("Processing trace {}", message);
+        logger.debug("Processing trace {}", message);
 
         if (message != null && !message.isEmpty()) {
             try {
@@ -143,10 +143,10 @@ public class TracesService {
                             + trace.getComponentService());
                 }
 
-                log.debug("Trace: {}", trace);
+                logger.debug("Trace: {}", trace);
                 this.traceRepository.save(trace);
             } catch (Exception e) {
-                log.error("Error on processing TCP trace {}: ", message, e);
+                logger.error("Error on processing TCP trace {}: ", message, e);
             }
         }
     }
@@ -178,7 +178,7 @@ public class TracesService {
     @SuppressWarnings("unchecked")
     public void processBeatTrace(Map<String, Object> dataMap,
             boolean fromDockbeat) {
-        log.debug("Processing trace {}", dataMap.toString());
+        logger.debug("Processing trace {}", dataMap.toString());
         if (dataMap != null && !dataMap.isEmpty()) {
             try {
                 Trace trace = setInitialBeatTraceData(dataMap);
@@ -199,14 +199,14 @@ public class TracesService {
                 if (containerName != null) {
                     trace.setContainerName(containerName);
                     // Metricbeat
-                    if (dataMap.get("metricset") == null) {
+                    if (dataMap.get("metricset") != null) {
                         if (component != null) {
                             trace.setComponent(component + "_" + containerName);
                         }
                     } else {// Filebeat
                         if (!containerName
                                 .matches(startsWithTestOrSutExpression)) {
-                            log.error(
+                            logger.error(
                                     "Filebeat trace container name {} does not matches sut/test, discarding",
                                     containerName);
                             return;
@@ -235,18 +235,20 @@ public class TracesService {
                 }
 
                 // Exec, Component and Component Service
-                Map<String, String> componentExecAndComponentServiceMap = processGrokExpression(
-                        trace.getContainerName(),
-                        componentExecAndComponentServiceExpression);
-                if (componentExecAndComponentServiceMap != null
-                        && !componentExecAndComponentServiceMap.isEmpty()) {
-                    trace.setExec(
-                            componentExecAndComponentServiceMap.get("exec"));
-                    trace.setComponent(componentExecAndComponentServiceMap
-                            .get("component"));
-                    trace.setComponentService(
-                            componentExecAndComponentServiceMap
-                                    .get("componentService"));
+                if (trace.getContainerName() != null) {
+                    Map<String, String> componentExecAndComponentServiceMap = processGrokExpression(
+                            trace.getContainerName(),
+                            componentExecAndComponentServiceExpression);
+                    if (componentExecAndComponentServiceMap != null
+                            && !componentExecAndComponentServiceMap.isEmpty()) {
+                        trace.setExec(componentExecAndComponentServiceMap
+                                .get("exec"));
+                        trace.setComponent(componentExecAndComponentServiceMap
+                                .get("component"));
+                        trace.setComponentService(
+                                componentExecAndComponentServiceMap
+                                        .get("componentService"));
+                    }
                 }
 
                 trace = cleanCommonFields(trace, trace.getMessage());
@@ -274,7 +276,7 @@ public class TracesService {
                                             .get(trace.getEtType()));
 
                         } else {
-                            log.error(
+                            logger.error(
                                     "Dockbeat trace container name {} does not matches sut/test, discarding",
                                     trace.getContainerName());
                             return;
@@ -326,10 +328,10 @@ public class TracesService {
                     }
                 }
 
-                log.debug("Trace: {}", trace);
+                logger.debug("Trace: {}", trace);
                 this.traceRepository.save(trace);
             } catch (Exception e) {
-                log.error("Error on processing Beat trace {}: ", dataMap, e);
+                logger.error("Error on processing Beat trace {}: ", dataMap, e);
             }
         }
     }
