@@ -4,8 +4,6 @@ import static java.lang.Thread.sleep;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
@@ -19,6 +17,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 
+// docker run --rm --name zxc -e LOGSTASHHOST=172.17.0.1 -e LOGSTASHPORT=5044 -v /var/run/docker.sock:/var/run/docker.sock elastest/etm-dockbeat
 @Service
 public class BeatsServerService {
     public final Logger log = getLogger(lookup().lookupClass());
@@ -28,6 +27,12 @@ public class BeatsServerService {
     private final int threadCount = 10;
     private Server server;
     private final int beatsPort = 5044;
+
+    private TracesService tracesService;
+
+    public BeatsServerService(TracesService tracesService) {
+        this.tracesService = tracesService;
+    }
 
     @PostConstruct
     void init() throws InterruptedException {
@@ -67,17 +72,9 @@ public class BeatsServerService {
      * Used to assert the number of messages send to the server
      */
     private class SpyListener extends MessageListener {
-        private AtomicInteger receivedCount;
-
-        public SpyListener() {
-            super();
-            receivedCount = new AtomicInteger(0);
-        }
-
         public void onNewMessage(ChannelHandlerContext ctx, Message message) {
-            log.debug("The event message: {}", message);
-            log.debug("The message data: {}", message.getData());
-            receivedCount.incrementAndGet();
+            log.debug("The Beats message data: {}", message.getData());
+            tracesService.processBeatTrace(message.getData());
         }
     }
 }
