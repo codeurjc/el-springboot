@@ -133,6 +133,11 @@ public class TracesService {
                 }
 
                 trace = cleanCommonFields(trace, message);
+                
+                if (trace.getComponentService() != null) {
+                    trace.setComponent(trace.getComponent() + "_"
+                            + trace.getComponentService());
+                }
 
                 log.debug("Trace: {}", trace);
                 this.traceRepository.save(trace);
@@ -239,6 +244,7 @@ public class TracesService {
                     trace.setStreamType(StreamType.LOG);
                 }
 
+                // Its Metric
                 if (trace.getStreamType() == null
                         || !trace.getStreamType().equals(StreamType.LOG)) {
                     // Dockbeat
@@ -250,6 +256,10 @@ public class TracesService {
                                 trace.setComponent(trace.getComponent() + "_"
                                         + trace.getComponentService());
                             }
+                            trace.setEtType((String) dataMap.get("type"));
+                            trace.setContent(
+                                    (String) dataMap.get(trace.getEtType()));
+
                         } else {
                             return;
                         }
@@ -267,10 +277,36 @@ public class TracesService {
                                     .getMapFieldByTreeList(dataMap,
                                             Arrays.asList(metricsetNameTree));
 
-                            trace.setEtType(
-                                    metricsetModule + "_" + metricsetName);
-                            
+                            String metricName = metricsetModule + "_"
+                                    + metricsetName;
+                            trace.setEtType(metricName);
+                            trace.setMetricName(metricName);
+
+                            String[] contentTree = new String[] {
+                                    metricsetModule, metricsetName };
+                            String content = (String) Utils
+                                    .getMapFieldByTreeList(dataMap,
+                                            Arrays.asList(contentTree));
+
+                            trace.setContent(content);
+
+                            if (trace.getStreamType() == null) {
+                                trace.setStreamType(
+                                        StreamType.COMPOSED_METRICS);
+                            }
+
                         }
+                    }
+                } else { // log
+                    trace.setEtType("et_logs");
+
+                    if (trace.getStream() == null) {
+                        trace.setStream("default_log");
+                    }
+
+                    if (trace.getComponentService() != null) {
+                        trace.setComponent(trace.getComponent() + "_"
+                                + trace.getComponentService());
                     }
                 }
 
