@@ -42,6 +42,8 @@ public class TracesService {
 
     String startsWithTestOrSutExpression = "/^(test|sut)(_)?(\\d*)(.*)?/";
 
+    String dockbeatStream = "et_dockbeat";
+    
     public TracesService(TraceRepository traceRepository) {
         this.traceRepository = traceRepository;
     }
@@ -133,7 +135,7 @@ public class TracesService {
                 }
 
                 trace = cleanCommonFields(trace, message);
-                
+
                 if (trace.getComponentService() != null) {
                     trace.setComponent(trace.getComponent() + "_"
                             + trace.getComponentService());
@@ -171,12 +173,16 @@ public class TracesService {
 
     }
 
-    public void processBeatTrace(Map<String, Object> dataMap) {
+    public void processBeatTrace(Map<String, Object> dataMap,
+            boolean fromDockbeat) {
         log.debug("Processing trace {}", dataMap.toString());
-        // TODO dockbeat input
         if (dataMap != null && !dataMap.isEmpty()) {
             try {
                 Trace trace = setInitialBeatTraceData(dataMap);
+
+                if (fromDockbeat) {
+                    trace.setStream(dockbeatStream);
+                }
 
                 String component = (String) dataMap.get("component");
                 if (component == null) {
@@ -248,7 +254,7 @@ public class TracesService {
                 if (trace.getStreamType() == null
                         || !trace.getStreamType().equals(StreamType.LOG)) {
                     // Dockbeat
-                    if (trace.getStream().equals("et_dockbeat")) {
+                    if (trace.getStream().equals(dockbeatStream)) {
                         if (trace.getContainerName()
                                 .matches("(\\D*\\d*_\\D*_\\d*)|(\\D*_\\d*)")) {
                             trace.setStreamType(StreamType.COMPOSED_METRICS);

@@ -26,7 +26,9 @@ public class BeatsServerService {
     private final String host = "0.0.0.0";
     private final int threadCount = 10;
     private Server server;
+    private Server dockbeatServer;
     private final int beatsPort = 5044;
+    private final int dockbeatPort = 5037;
 
     private TracesService tracesService;
 
@@ -38,6 +40,7 @@ public class BeatsServerService {
     void init() throws InterruptedException {
         group = new NioEventLoopGroup();
         this.startBeatsServer();
+        this.startDockbeatServer();
     }
 
     @PreDestroy
@@ -45,6 +48,7 @@ public class BeatsServerService {
         log.info("Shuting down Beats server");
         group.shutdownGracefully();
         server.stop();
+        dockbeatServer.stop();
     }
 
     public void startBeatsServer() throws InterruptedException {
@@ -68,13 +72,43 @@ public class BeatsServerService {
 
     }
 
+    public void startDockbeatServer() throws InterruptedException {
+        dockbeatServer = new Server(host, dockbeatPort, 30, threadCount);
+        SpyListener listener = new SpyListener(true);
+        dockbeatServer.setMessageListener(listener);
+        Runnable serverTask = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    dockbeatServer.listen();
+                } catch (InterruptedException e) {
+                }
+            }
+        };
+
+        new Thread(serverTask).start();
+        log.info("Listen at {} Dockbeat Beats Port", dockbeatPort);
+        sleep(1000); // start server give is some time.
+    }
+
     /**
      * Used to assert the number of messages send to the server
      */
     private class SpyListener extends MessageListener {
+        boolean fromDockbeat = false;
+
+        public SpyListener() {
+        }
+
+        public SpyListener(boolean fromDockbeat) {
+            this.fromDockbeat = fromDockbeat;
+
+        }
+
         public void onNewMessage(ChannelHandlerContext ctx, Message message) {
             log.debug("The Beats message data: {}", message.getData());
-            tracesService.processBeatTrace(message.getData());
+            tracesService.processBeatTrace(message.getData(),
+                    this.fromDockbeat);
         }
     }
 }
