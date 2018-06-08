@@ -1,10 +1,14 @@
 package io.elastest.model;
 
+import java.util.LinkedHashMap;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+
+import org.json.JSONObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -237,6 +241,11 @@ public class Trace {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public void setContentFromLinkedHashMap(LinkedHashMap<Object, Object> map) {
+        String jsonString = new JSONObject(map).toString();
+        this.setContent(jsonString);
     }
 
     public String getUnit() {

@@ -8,6 +8,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -40,10 +41,10 @@ public class TracesService {
     String componentExecAndComponentServiceExpression = "^(?<component>(test|sut|dynamic))_?(?<exec>\\d*)(_(?<componentService>[^_]*(?=_\\d*)?))?";
     String cleanMessageExpression = "^([<]\\d*[>].*)?(?>test_\\d*|sut_\\d*|dynamic_\\d*)\\D*(?>_exec)\\[.*\\][:][\\s]";
 
-    String startsWithTestOrSutExpression = "/^(test|sut)(_)?(\\d*)(.*)?/";
+    String startsWithTestOrSutExpression = "^(test|sut)(_)?(\\d*)(.*)?";
 
     String dockbeatStream = "et_dockbeat";
-    
+
     public TracesService(TraceRepository traceRepository) {
         this.traceRepository = traceRepository;
     }
@@ -99,7 +100,8 @@ public class TracesService {
                 trace.setStreamType(StreamType.LOG);
 
                 // Timestamp
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+                DateFormat df = new SimpleDateFormat(
+                        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                 String timestampAsISO8061 = df.format(timestamp);
                 trace.setTimestamp(timestampAsISO8061);
 
@@ -144,7 +146,7 @@ public class TracesService {
                 log.debug("Trace: {}", trace);
                 this.traceRepository.save(trace);
             } catch (Exception e) {
-                log.error("Error on processing TCP trace: ", e);
+                log.error("Error on processing TCP trace {}: ", message, e);
             }
         }
     }
@@ -173,6 +175,7 @@ public class TracesService {
 
     }
 
+    @SuppressWarnings("unchecked")
     public void processBeatTrace(Map<String, Object> dataMap,
             boolean fromDockbeat) {
         log.debug("Processing trace {}", dataMap.toString());
@@ -185,9 +188,6 @@ public class TracesService {
                 }
 
                 String component = (String) dataMap.get("component");
-                if (component == null) {
-                    return;
-                }
 
                 trace.setComponent(component);
 
@@ -196,15 +196,19 @@ public class TracesService {
                         "container", "name" };
                 String containerName = (String) Utils.getMapFieldByTreeList(
                         dataMap, Arrays.asList(containerNameTree));
-
-                trace.setContainerName(containerName);
                 if (containerName != null) {
+                    trace.setContainerName(containerName);
                     // Metricbeat
                     if (dataMap.get("metricset") == null) {
-                        trace.setComponent(component + "_" + containerName);
+                        if (component != null) {
+                            trace.setComponent(component + "_" + containerName);
+                        }
                     } else {// Filebeat
                         if (!containerName
                                 .matches(startsWithTestOrSutExpression)) {
+                            log.error(
+                                    "Filebeat trace container name {} does not matches sut/test, discarding",
+                                    containerName);
                             return;
                         }
                         if (dataMap.get("json") != null) {
@@ -229,6 +233,7 @@ public class TracesService {
                         }
                     }
                 }
+
                 // Exec, Component and Component Service
                 Map<String, String> componentExecAndComponentServiceMap = processGrokExpression(
                         trace.getContainerName(),
@@ -256,17 +261,22 @@ public class TracesService {
                     // Dockbeat
                     if (trace.getStream().equals(dockbeatStream)) {
                         if (trace.getContainerName()
-                                .matches("(\\D*\\d*_\\D*_\\d*)|(\\D*_\\d*)")) {
+                                .matches(startsWithTestOrSutExpression)) {
                             trace.setStreamType(StreamType.COMPOSED_METRICS);
                             if (trace.getComponentService() != null) {
                                 trace.setComponent(trace.getComponent() + "_"
                                         + trace.getComponentService());
                             }
                             trace.setEtType((String) dataMap.get("type"));
-                            trace.setContent(
-                                    (String) dataMap.get(trace.getEtType()));
+                            trace.setMetricName(trace.getEtType());
+                            trace.setContentFromLinkedHashMap(
+                                    (LinkedHashMap<Object, Object>) dataMap
+                                            .get(trace.getEtType()));
 
                         } else {
+                            log.error(
+                                    "Dockbeat trace container name {} does not matches sut/test, discarding",
+                                    trace.getContainerName());
                             return;
                         }
                     } else {
@@ -290,11 +300,11 @@ public class TracesService {
 
                             String[] contentTree = new String[] {
                                     metricsetModule, metricsetName };
-                            String content = (String) Utils
+                            LinkedHashMap<Object, Object> content = (LinkedHashMap<Object, Object>) Utils
                                     .getMapFieldByTreeList(dataMap,
                                             Arrays.asList(contentTree));
 
-                            trace.setContent(content);
+                            trace.setContentFromLinkedHashMap(content);
 
                             if (trace.getStreamType() == null) {
                                 trace.setStreamType(
@@ -319,7 +329,7 @@ public class TracesService {
                 log.debug("Trace: {}", trace);
                 this.traceRepository.save(trace);
             } catch (Exception e) {
-                log.error("Error on processing TCP trace: ", e);
+                log.error("Error on processing Beat trace {}: ", dataMap, e);
             }
         }
     }
