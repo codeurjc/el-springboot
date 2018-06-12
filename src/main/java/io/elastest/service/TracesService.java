@@ -8,7 +8,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -85,6 +87,30 @@ public class TracesService {
         return trace;
     }
 
+    public Trace matchesLevelAndContainerNameFromMessage(Trace trace,
+            String message) {
+        if (message != null) {
+            // Level
+            Map<String, String> levelMap = processGrokExpression(message,
+                    javaLogLevelExpression);
+            try {
+                LevelEnum level = LevelEnum.fromValue(levelMap.get("level"));
+                trace.setLevel(level);
+            } catch (Exception e) {
+
+            }
+
+            // Container Name
+            Map<String, String> containerNameMap = processGrokExpression(
+                    message, containerNameExpression);
+            String containerName = containerNameMap.get("containerName");
+            if (containerName != null) {
+                trace.setContainerName(containerName);
+            }
+        }
+        return trace;
+    }
+
     /* *********** */
     /* *** TCP *** */
     /* *********** */
@@ -105,21 +131,9 @@ public class TracesService {
                 String timestampAsISO8061 = df.format(timestamp);
                 trace.setTimestamp(timestampAsISO8061);
 
-                // Level
-                Map<String, String> levelMap = processGrokExpression(message,
-                        javaLogLevelExpression);
-                try {
-                    LevelEnum level = LevelEnum
-                            .fromValue(levelMap.get("level"));
-                    trace.setLevel(level);
-                } catch (Exception e) {
-
-                }
-
-                // Container Name
-                Map<String, String> containerNameMap = processGrokExpression(
-                        message, containerNameExpression);
-                trace.setContainerName(containerNameMap.get("containerName"));
+                // If message, set level and container name
+                trace = this.matchesLevelAndContainerNameFromMessage(trace,
+                        message);
 
                 // Exec, Component and Component Service
                 Map<String, String> componentExecAndComponentServiceMap = processGrokExpression(
@@ -186,16 +200,18 @@ public class TracesService {
                 if (fromDockbeat) {
                     trace.setStream(dockbeatStream);
                 }
+                // If message, set level and container name
+                trace = this.matchesLevelAndContainerNameFromMessage(trace,
+                        (String) dataMap.get("message"));
 
-                String component = (String) dataMap.get("component");
-
-                trace.setComponent(component);
+                String component = trace.getComponent();
 
                 // Docker
                 String[] containerNameTree = new String[] { "docker",
                         "container", "name" };
                 String containerName = (String) Utils.getMapFieldByTreeList(
                         dataMap, Arrays.asList(containerNameTree));
+
                 if (containerName != null) {
                     trace.setContainerName(containerName);
                     // Metricbeat
@@ -336,4 +352,28 @@ public class TracesService {
         }
     }
 
+    /* ************ */
+    /* *** HTTP *** */
+    /* ************ */
+
+    @SuppressWarnings("unchecked")
+    public void processHttpTrace(Map<String, Object> dataMap) {
+        if (dataMap != null && !dataMap.isEmpty()) {
+            List<String> messages = (List<String>) dataMap.get("messages");
+            // Multiple messages
+            if (messages != null) {
+                logger.debug("Is multiple message trace. Spliting...");
+                for (String message : messages) {
+                    Map<String, Object> currentMap = new HashMap<>();
+                    currentMap.putAll(dataMap);
+                    currentMap.remove("messages");
+                    currentMap.put("message", message);
+                    this.processHttpTrace(currentMap);
+                    return;
+                }
+            } else {
+                this.processBeatTrace(dataMap, false);
+            }
+        }
+    }
 }

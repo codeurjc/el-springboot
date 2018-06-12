@@ -46,7 +46,7 @@ public class Trace {
 
     @JsonView({ TraceView.class })
     @Column(name = "etType")
-    @JsonProperty("etType")
+    @JsonProperty("et_type")
     String etType;
 
     @JsonView({ TraceView.class })
@@ -66,7 +66,7 @@ public class Trace {
 
     @JsonView({ TraceView.class })
     @Column(name = "streamType", nullable = false)
-    @JsonProperty("streamType")
+    @JsonProperty("stream_type")
     StreamType streamType;
 
     /* *** For Log *** */
@@ -110,10 +110,6 @@ public class Trace {
     public Trace() {
     }
 
-    /* *********************** */
-    /* *** Getters/Setters *** */
-    /* *********************** */
-
     public Trace(Long id, String exec, String component, String etType,
             String timestamp, String stream, String containerName,
             StreamType streamType, String message, LevelEnum level,
@@ -134,6 +130,10 @@ public class Trace {
         this.unit = unit;
         this.units = units;
     }
+
+    /* *********************** */
+    /* *** Getters/Setters *** */
+    /* *********************** */
 
     public Long getId() {
         return id;
@@ -266,7 +266,7 @@ public class Trace {
 
     @Override
     public String toString() {
-        return "Trace [exec=" + exec + ", component=" + component
+        return "Trace [id=" + id + ", exec=" + exec + ", component=" + component
                 + ", componentService=" + componentService + ", etType="
                 + etType + ", timestamp=" + timestamp + ", stream=" + stream
                 + ", containerName=" + containerName + ", streamType="
