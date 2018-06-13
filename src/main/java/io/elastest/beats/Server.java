@@ -9,17 +9,20 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import io.elastest.netty.SslSimpleBuilder;
+
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
-public class Server {
-    private final static Logger logger = LogManager.getLogger(Server.class);
+import org.slf4j.Logger;
 
+public class Server {
+    public final Logger logger = getLogger(lookup().lookupClass());
     private final int port;
     private final NioEventLoopGroup workGroup;
     private final String host;

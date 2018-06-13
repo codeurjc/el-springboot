@@ -7,8 +7,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.AttributeKey;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
+import org.slf4j.Logger;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -16,8 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Manages the connection state to the beats client.
  */
 public class ConnectionHandler extends ChannelDuplexHandler {
-    private final static Logger logger = LogManager
-            .getLogger(ConnectionHandler.class);
+    public final Logger logger = getLogger(lookup().lookupClass());
 
     public static AttributeKey<AtomicBoolean> CHANNEL_SEND_KEEP_ALIVE = AttributeKey
             .valueOf("channel-send-keep-alive");

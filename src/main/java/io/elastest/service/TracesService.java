@@ -18,12 +18,13 @@ import javax.annotation.PostConstruct;
 import org.aicer.grok.dictionary.GrokDictionary;
 import org.aicer.grok.util.Grok;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import io.elastest.dao.TraceRepository;
 import io.elastest.model.Enums.LevelEnum;
 import io.elastest.model.Enums.StreamType;
-import io.elastest.dao.TraceRepository;
 import io.elastest.model.Trace;
 import io.elastest.util.Utils;
 
@@ -32,6 +33,7 @@ public class TracesService {
     public final Logger logger = getLogger(lookup().lookupClass());
 
     private final TraceRepository traceRepository;
+    private final QueueService queueService;
 
     final GrokDictionary dictionary = new GrokDictionary();
 
@@ -47,8 +49,11 @@ public class TracesService {
 
     String dockbeatStream = "et_dockbeat";
 
-    public TracesService(TraceRepository traceRepository) {
+    @Autowired
+    public TracesService(TraceRepository traceRepository,
+            QueueService queueService) {
         this.traceRepository = traceRepository;
+        this.queueService = queueService;
     }
 
     @PostConstruct
@@ -111,6 +116,12 @@ public class TracesService {
         return trace;
     }
 
+    public void saveTrace(Trace trace) {
+        synchronized (this.traceRepository) {
+            this.traceRepository.save(trace);
+        }
+    }
+
     /* *********** */
     /* *** TCP *** */
     /* *********** */
@@ -158,7 +169,8 @@ public class TracesService {
                 }
 
                 logger.debug("Trace: {}", trace);
-                this.traceRepository.save(trace);
+                this.saveTrace(trace);
+                this.queueService.sendTrace(trace);
             } catch (Exception e) {
                 logger.error("Error on processing TCP trace {}: ", message, e);
             }
@@ -345,7 +357,8 @@ public class TracesService {
                 }
 
                 logger.debug("Trace: {}", trace);
-                this.traceRepository.save(trace);
+                this.saveTrace(trace);
+                this.queueService.sendTrace(trace);
             } catch (Exception e) {
                 logger.error("Error on processing Beat trace {}: ", dataMap, e);
             }

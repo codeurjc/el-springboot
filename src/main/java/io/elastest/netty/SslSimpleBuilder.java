@@ -5,10 +5,14 @@ import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.net.ssl.SSLEngine;
+
+import org.slf4j.Logger;
+
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.io.*;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -28,8 +32,7 @@ public class SslSimpleBuilder {
         VERIFY_PEER,
         FORCE_PEER,
     }
-    private final static Logger logger = LogManager.getLogger(SslSimpleBuilder.class);
-
+    public final Logger logger = getLogger(lookup().lookupClass());
 
     private File sslKeyFile;
     private File sslCertificateFile;

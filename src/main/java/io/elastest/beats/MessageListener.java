@@ -1,9 +1,11 @@
 package io.elastest.beats;
 
-import io.netty.channel.ChannelHandlerContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import org.slf4j.Logger;
+
+import io.netty.channel.ChannelHandlerContext;
 
 /**
  * This class is implemented in ruby in `lib/logstash/inputs/beats/message_listener`,
@@ -12,7 +14,7 @@ import org.apache.logging.log4j.Logger;
  */
 // This need to be implemented in Ruby
 public class MessageListener implements IMessageListener {
-    private final static Logger logger = LogManager.getLogger(MessageListener.class);
+    public final Logger logger = getLogger(lookup().lookupClass());
 
 
     /**

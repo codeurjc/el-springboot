@@ -2,15 +2,17 @@ package io.elastest.beats;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.AttributeKey;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.net.InetSocketAddress;
 import javax.net.ssl.SSLHandshakeException;
 
+import org.slf4j.Logger;
+
 public class BeatsHandler extends SimpleChannelInboundHandler<Batch> {
-    private final static Logger logger = LogManager.getLogger(BeatsHandler.class);
+    public final Logger logger = getLogger(lookup().lookupClass());
     private final IMessageListener messageListener;
     private ChannelHandlerContext context;
 

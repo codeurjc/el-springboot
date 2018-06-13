@@ -5,9 +5,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -16,9 +16,11 @@ import java.util.Map;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterOutputStream;
 
+import org.slf4j.Logger;
+
 
 public class BeatsParser extends ByteToMessageDecoder {
-    private final static Logger logger = LogManager.getLogger(BeatsParser.class);
+    public final Logger logger = getLogger(lookup().lookupClass());
 
     private Batch batch;
 
