@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-public interface TracesApi {
+@RequestMapping(value = "traces")
+public interface TracesApi extends EtmApiRoot {
 
     @RequestMapping(value = "/", produces = {
             "application/json" }, consumes = {

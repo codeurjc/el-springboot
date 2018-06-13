@@ -232,12 +232,18 @@ public class TracesService {
                             trace.setComponent(component + "_" + containerName);
                         }
                     } else {// Filebeat
-                        if (!containerName
-                                .matches(startsWithTestOrSutExpression)) {
-                            logger.error(
-                                    "Filebeat trace container name {} does not matches sut/test, discarding",
-                                    containerName);
-                            return;
+                        if (component == null) {
+                            // from etm filebeat, discard non sut/test
+                            // containers
+                            if (!containerName
+                                    .matches(startsWithTestOrSutExpression)) {
+                                logger.error(
+                                        "Filebeat trace without component and container name {} does not matches sut/test, discarding",
+                                        containerName);
+                                return;
+                            }
+                        } else {
+                            trace.setComponent(component + "_" + containerName);
                         }
                         if (dataMap.get("json") != null) {
 
