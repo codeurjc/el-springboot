@@ -15,7 +15,7 @@ import org.productivity.java.syslog4j.server.impl.net.tcp.TCPNetSyslogServerConf
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
-// docker run --name sut_34_fullteaching --rm  -itd --log-driver=syslog --log-opt syslog-address=tcp://localhost:5001 --log-opt tag=sut_34_fullteaching_exec elastest/test-etm-alpinegitjava sh -c "while true; do echo "aaaaa"; sleep 2; done"
+// docker run --name sut_3718_fullteaching --rm  -itd --log-driver=syslog --log-opt syslog-address=tcp://localhost:5001 --log-opt tag=sut_3718_fullteaching_exec elastest/test-etm-alpinegitjava sh -c "while true; do echo "aaaaa"; sleep 2; done"
 @Service
 public class TcpServerService {
     public final Logger log = getLogger(lookup().lookupClass());

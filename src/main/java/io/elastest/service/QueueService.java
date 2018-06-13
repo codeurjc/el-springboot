@@ -23,6 +23,6 @@ public class QueueService {
         return trace.getComponent() + "." + trace.getStream() + "."
                 + trace.getExec() + "." + trace.getStreamType();
 
-        // e.g.: sut_fullteaching.default_log.34.log
+        // e.g.: sut_fullteaching.default_log.3718.log
     }
 }
