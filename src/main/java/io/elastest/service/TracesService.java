@@ -3,7 +3,9 @@ package io.elastest.service;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -12,11 +14,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import org.aicer.grok.dictionary.GrokDictionary;
-import org.aicer.grok.util.Grok;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,8 @@ import io.elastest.model.Enums.LevelEnum;
 import io.elastest.model.Enums.StreamType;
 import io.elastest.model.Trace;
 import io.elastest.util.Utils;
+import io.krakens.grok.api.Grok;
+import io.krakens.grok.api.GrokCompiler;
 
 @Service
 public class TracesService {
@@ -35,9 +38,9 @@ public class TracesService {
     private final TraceRepository traceRepository;
     private final QueueService queueService;
 
-    final GrokDictionary dictionary = new GrokDictionary();
+    GrokCompiler grokCompiler;
 
-    @Value("${grok.patterns.file}")
+    @Value("${grok.patterns.file.path}")
     private String grokPatternsFilePath;
 
     String javaLogLevelExpression = "%{JAVALOGLEVEL:level}";
@@ -57,16 +60,24 @@ public class TracesService {
     }
 
     @PostConstruct
-    private void init() {
-        dictionary.addBuiltInDictionaries();
-        dictionary.addDictionary(new File(grokPatternsFilePath));
-        dictionary.bind();
+    private void init() throws IOException {
+        grokCompiler = GrokCompiler.newInstance();
+        grokCompiler.registerDefaultPatterns();
+
+        InputStream inputStream = getClass()
+                .getResourceAsStream("/" + grokPatternsFilePath);
+        grokCompiler.register(inputStream, StandardCharsets.UTF_8);
+
     }
 
     public Map<String, String> processGrokExpression(String message,
             String expression) {
-        Grok compiledPattern = dictionary.compileExpression(expression);
-        return compiledPattern.extractNamedGroups(message);
+        Grok compiledPattern = grokCompiler.compile(expression);
+        Map<String, Object> map = compiledPattern.match(message).capture();
+
+        // As <String,String> Map
+        return map.entrySet().stream().collect(Collectors
+                .toMap(Map.Entry::getKey, e -> (String) e.getValue()));
     }
 
     public Trace cleanCommonFields(Trace trace, String message) {
@@ -180,6 +191,7 @@ public class TracesService {
     /* ************* */
     /* *** Beats *** */
     /* ************* */
+
     public Trace setInitialBeatTraceData(Map<String, Object> dataMap) {
         Trace trace = new Trace();
         trace.setComponent((String) dataMap.get("component"));
@@ -295,6 +307,9 @@ public class TracesService {
                 if (trace.getStreamType() == null
                         || !trace.getStreamType().equals(StreamType.LOG)) {
                     // Dockbeat
+                    if(trace.getStream() == null) {
+                        return;
+                    }
                     if (trace.getStream().equals(dockbeatStream)) {
                         if (trace.getContainerName()
                                 .matches(startsWithTestOrSutExpression)) {

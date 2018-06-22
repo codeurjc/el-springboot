@@ -1,4 +1,4 @@
-package io.elastest.netty;
+package io.elastest.beats;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.ssl.OpenSsl;

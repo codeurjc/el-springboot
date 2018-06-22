@@ -5,8 +5,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import org.slf4j.Logger;
 
-import io.elastest.netty.SslSimpleBuilder;
-
 public class Runner {
     private static final int DEFAULT_PORT = 5044;
 
